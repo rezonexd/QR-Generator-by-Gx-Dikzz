@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Generator Pro</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap');
+
+* {
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body {
+  height:100vh;
+  overflow:hidden;
+  background:#020617;
+  color:white;
+}
+
+/* BACKGROUND GLOW */
+.bg {
+  position:absolute;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  z-index:-1;
+}
+
+.blob {
+  position:absolute;
+  width:400px;
+  height:400px;
+  background: radial-gradient(circle, #38bdf8, transparent);
+  filter: blur(120px);
+  animation: move 10s infinite alternate;
+}
+
+.blob:nth-child(2) {
+  left:60%;
+  top:40%;
+  background: radial-gradient(circle, #22c55e, transparent);
+  animation-duration:12s;
+}
+
+@keyframes move {
+  from { transform: translate(0,0); }
+  to { transform: translate(100px,80px); }
+}
+
+/* HEADER */
+.header {
+  padding:15px 25px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(10px);
+}
+
+.logo {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.logo img {
+  width:40px;
+  border-radius:50%;
+}
+
+.nav a {
+  margin-left:10px;
+  padding:6px 10px;
+  border-radius:8px;
+  background:#22c55e;
+  color:black;
+  text-decoration:none;
+  font-size:12px;
+}
+
+/* MAIN */
+.main {
+  height:calc(100vh - 70px);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.card {
+  width:100%;
+  max-width:420px;
+  padding:25px;
+  border-radius:20px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);
+  text-align:center;
+}
+
+/* TAB */
+.tabs {
+  display:flex;
+}
+
+.tab {
+  flex:1;
+  padding:8px;
+  cursor:pointer;
+  border-radius:10px;
+}
+
+.tab.active {
+  background:#38bdf8;
+  color:black;
+}
+
+input {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:10px;
+  border:none;
+}
+
+/* BUTTON */
+button {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(45deg,#38bdf8,#22c55e);
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover {
+  opacity:0.8;
+}
+
+/* QR */
+#qr img {
+  width:220px;
+  margin-top:15px;
+  border-radius:10px;
+  background:white;
+  padding:5px;
+}
+
+.preview {
+  width:100px;
+  margin-top:10px;
+}
+
+.wm {
+  margin-top:10px;
+  font-size:12px;
+  opacity:0.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="bg">
+  <div class="blob"></div>
+  <div class="blob"></div>
+</div>
+
+<div class="header">
+  <div class="logo">
+    <img src="assets/logo.png">
+    <b>Gx Dikzz</b>
+  </div>
+
+  <div class="nav">
+    <a href="https://apigxdikzz.vercel.app">Website</a>
+    <a href="https://youtube.com/xdicabot">YT</a>
+    <a href="https://wa.me/6285768090238">WA</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="card">
+
+    <h2>QR Generator by Gx Dikzz Dev</h2>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('text')">Text</div>
+      <div class="tab" onclick="switchTab('image')">Image</div>
+    </div>
+
+    <div id="textBox">
+      <input type="text" id="text" placeholder="Masukkan teks / link">
+    </div>
+
+    <div id="imageBox" style="display:none;">
+      <input type="file" id="file" accept="image/*">
+      <div id="preview"></div>
+    </div>
+
+    <button onclick="generateQR()">Generate</button>
+
+    <div id="qr"></div>
+
+    <button id="downloadBtn" style="display:none;" onclick="downloadQR()">Download PNG</button>
+
+    <div class="wm">© Gx Dikzz</div>
+
+  </div>
+</div>
+
+<script>
+let mode = "text";
+let qrUrl = "";
+
+function switchTab(tab) {
+  mode = tab;
+  document.querySelectorAll(".tab").forEach(e => e.classList.remove("active"));
+  event.target.classList.add("active");
+
+  document.getElementById("textBox").style.display = tab === "text" ? "block" : "none";
+  document.getElementById("imageBox").style.display = tab === "image" ? "block" : "none";
+}
+
+document.getElementById("file").addEventListener("change", function() {
+  let file = this.files[0];
+  let reader = new FileReader();
+
+  reader.onload = function(e) {
+    document.getElementById("preview").innerHTML =
+      `<img class="preview" src="${e.target.result}">`;
+  };
+
+  if (file) reader.readAsDataURL(file);
+});
+
+function generateQR() {
+  if (mode === "text") {
+    let text = document.getElementById("text").value;
+    if (!text) return alert("Isi teks dulu!");
+
+    qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(text)}`;
+    showQR();
+  }
+
+  if (mode === "image") {
+    let file = document.getElementById("file").files[0];
+    if (!file) return alert("Upload gambar dulu!");
+
+    let reader = new FileReader();
+    reader.onload = function(e) {
+      qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(e.target.result)}`;
+      showQR();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function showQR() {
+  document.getElementById("qr").innerHTML =
+    `<img id="qrImg" src="${qrUrl}">`;
+
+  document.getElementById("downloadBtn").style.display = "block";
+}
+
+/* DOWNLOAD FIX (beneran simpan ke device) */
+async function downloadQR() {
+  const res = await fetch(qrUrl);
+  const blob = await res.blob();
+
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "qrcode.png";
+  document.body.appendChild(a);
+  a.click();
+
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
